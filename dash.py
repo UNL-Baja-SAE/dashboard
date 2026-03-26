@@ -1,57 +1,37 @@
 import pygame
 import math
 
-pygame.init()
-pygame.font.init()
-my_font = pygame.font.SysFont(None, 30)
-dail1 = "MPH"
-dail2 = "RPM"
 WIDTH, HEIGHT = 800, 480
-screen = pygame.display.set_mode((WIDTH, HEIGHT))
+CENTER_X, CENTER_Y = WIDTH // 4, HEIGHT // 2
+RADIUS = 180
+NEEDLE_LENGTH = 150
+MAX_SPEED = 55
 
-MPH_dail_pos = 0
-
-clock = pygame.time.Clock()
-width, height = WIDTH // 4, HEIGHT // 2
-radius = 180
-needle_length = 150
-speed = 0
-max_speed = 55
-
-
-running = True
-while running:
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            running = False
-        #speed = (speed + 0.3) % max_speed
-
+def draw_speedometer(screen, font, speed):
     start_angle = 135
     end_angle = 405
-    angle_deg = start_angle + (speed / max_speed) * (end_angle - start_angle)
+
+    speed = max(0, min(speed, MAX_SPEED))
+
+    angle_deg = start_angle + (speed / MAX_SPEED) * (end_angle - start_angle)
     angle_rad = math.radians(angle_deg)
 
-    x = width + needle_length * math.cos(angle_rad)
-    y = height + needle_length * math.sin(angle_rad)
+    needle_x = CENTER_X + NEEDLE_LENGTH * math.cos(angle_rad)
+    needle_y = CENTER_Y + NEEDLE_LENGTH * math.sin(angle_rad)
+
     screen.fill((0, 0, 0))
+    pygame.draw.circle(screen, (50, 100, 100), (CENTER_X, CENTER_Y), RADIUS, 4)
 
-    pygame.draw.circle(screen, (50, 100, 100), (width, height), radius, 4)
+    for value in range(0, MAX_SPEED + 1, 5):
+        tick_angle_deg = start_angle + (value / MAX_SPEED) * (end_angle - start_angle)
+        tick_angle_rad = math.radians(tick_angle_deg)
 
-    for value in range(0, max_speed + 1, 5):
-        angle_deg = start_angle + (value / max_speed) * (end_angle - start_angle)
-        angle_rad = math.radians(angle_deg)
+        text_radius = RADIUS - 30
+        text_x = CENTER_X + text_radius * math.cos(tick_angle_rad)
+        text_y = CENTER_Y + text_radius * math.sin(tick_angle_rad)
 
-        text_radius = radius - 30
-        text_x = width + text_radius * math.cos(angle_rad)
-        text_y = height + text_radius * math.sin(angle_rad)
-
-        text_surface = my_font.render(str(value), True, (255, 255, 255))
+        text_surface = font.render(str(value), True, (255, 255, 255))
         text_rect = text_surface.get_rect(center=(text_x, text_y))
-
         screen.blit(text_surface, text_rect)
 
-    pygame.draw.line(screen, (255, 0, 0), (width, height), (x, y), 4)
-
-    pygame.display.flip()
-
-pygame.quit()
+    pygame.draw.line(screen, (255, 0, 0), (CENTER_X, CENTER_Y), (needle_x, needle_y), 4)
