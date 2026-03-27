@@ -3,8 +3,10 @@ import pynmea2
 
 port = "/dev/serial0" 
 baud = 9600
-
-ser = serial.Serial(port, baudrate=baud, timeout=0.5)
+try:
+    ser = serial.Serial(port, baudrate=baud, timeout=0.5)
+except Exception as e:
+    print(f"Error: {e}")
 
 def receive_data():
     try:
@@ -19,5 +21,8 @@ def receive_data():
         print(f"Error: {e}")
     return None
     
-
-
+def is_connected():
+    # Check if 'ser' exists and is open
+    if 'ser' in globals() and ser.is_open:
+        return True
+    return False

@@ -1,0 +1,27 @@
+{
+    "button": {
+        "colours": {
+            "normal_border": "White",
+            "normal_bg": "#C2558F9F",
+            "normal_text": "White"
+        },
+        "misc": {
+            "shape": "rounded_rectangle",
+            "shape_corner_radius": "10",
+            "border_width": "2"
+        }
+    },
+    "#clock_box": {
+        "colours": {
+            "dark_bg": "#222222",
+            "normal_border": "#FFFFFF",
+            "normal_text": "#FFFFFF"
+        },
+        "misc": {
+            "border_width": "2",
+            "text_alignment": "center",
+            "shape": "rounded_rectangle",
+            "shape_corner_radius": "10"
+        }
+    }
+}
