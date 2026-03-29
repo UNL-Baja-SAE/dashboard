@@ -22,6 +22,7 @@ try:
     custom_font = pygame.font.Font('fonts/Russo_One/RussoOne-Regular.ttf', 90)
     font = pygame.font.Font('fonts/Russo_One/RussoOne-Regular.ttf', 18)
 
+
 except FileNotFoundError:
     print("CustomFont.ttf not found. Using default font.")
     custom_font = pygame.font.Font(None, 90)

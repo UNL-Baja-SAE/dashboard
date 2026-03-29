@@ -69,6 +69,9 @@ class Gauge:
 
         if hasattr(self, 'needle_gap'):
             pygame.draw.aacircle(bg, (50, 100, 100), (self.center_x, self.center_y), self.needle_gap, 4)
+            text_surface = self.font.render("mph", True, (255, 255, 255))
+            text_rect = text_surface.get_rect(center=(self.center_x, self.center_y+50))
+            bg.blit(text_surface, text_rect)
 
 
         return bg
@@ -108,7 +111,6 @@ class Gauge:
 
     def draw(self, screen, current_value):
         # 1. Stamp this gauge's static background
-        screen.blit(self.static_bg, (0, 0))
 
         # 2. Draw the text in the center
        # text_surface = self.custom_font.render(str(int(current_value)), True, (255, 255, 255))
@@ -130,10 +132,12 @@ class Gauge:
             screen, (255, 0, 0),
             self.center_x, self.center_y,
             angle_rad,
-            getattr(self, 'needle_gap', 0),  # Uses the gap if it exists, otherwise 0
+            getattr(self, 'needle_gap', 1)-1,  # Uses the gap if it exists, otherwise 0
             self.needle_len,
             3
         )
+        screen.blit(self.static_bg, (0, 0))
+
 
 class TextGauge(Gauge):
     def __init__(self, screen_w, screen_h, center_x, center_y, radius, max_value, font, custom_font,gap_width):
@@ -141,7 +145,6 @@ class TextGauge(Gauge):
         self.needle_len = int(radius * 0.75)
         self.needle_gap = self.needle_len - gap_width
         super().__init__(screen_w, screen_h, center_x, center_y, radius, max_value, font)
-
 
 
 
