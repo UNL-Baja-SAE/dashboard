@@ -1,5 +1,4 @@
 import pygame
-import pygame.gfxdraw
 import math
 
 from pygame import Surface
@@ -84,7 +83,6 @@ class Gauge:
             tick_angle_deg = start_angle + (value / (self.max_value / self.scale)) * (end_angle - start_angle)
             tick_angle_rad = math.radians(tick_angle_deg)
 
-            # --- Text Rendering ---
             text_radius = self.radius - 30
             text_x = self.center_x + text_radius * math.cos(tick_angle_rad)
             text_y = self.center_y + text_radius * math.sin(tick_angle_rad)
@@ -93,11 +91,9 @@ class Gauge:
             text_rect = text_surface.get_rect(center=(int(text_x), int(text_y)))
             bg.blit(text_surface, text_rect)
 
-            # --- Line Rendering (Directly to 1x background) ---
             tick_length = 12
             tick_start = self.radius - tick_length
 
-            # Use the identical rectangular needle function to draw the tick marks!
             draw_rectangular_needle(
                 bg,
                 (255, 255, 255),

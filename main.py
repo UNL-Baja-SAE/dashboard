@@ -1,6 +1,8 @@
 import pygame
 import pygame_gui
 import datetime
+import time
+import threading
 from gps import receive_data, is_connected
 from dash import TextGauge,Gauge, WIDTH, HEIGHT
 
@@ -30,20 +32,36 @@ except FileNotFoundError:
 
 clock = pygame.time.Clock()
 
+app_is_running = False
+
+def gps_worker():
+    global latest_gps_speed
+    while app_is_running:
+        if is_connected():
+            speed = receive_data()
+            if speed is not None:
+                latest_gps_speed = speed
+        else:
+            time.sleep(0.5)
 
 
 def main():
-    running = True
+    global app_is_running
+    app_is_running = True
     current_speed = 0.0
     current_rpm = 0.0
+    
+    gps_thread = threading.Thread(target=gps_worker, daemon=True)
+    gps_thread.start()
+    
     speedo = TextGauge(WIDTH, HEIGHT, center_x=200, center_y=240, radius=160, max_value=55, font=font,
                    custom_font=custom_font,gap_width=35)
     tacho = Gauge(WIDTH,HEIGHT,center_x=600, center_y=240, radius=160, max_value=7000, font=font,scale=1000)
-    while running:
+    while app_is_running:
         time_delta = clock.tick(60) / 1000.0
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                running = False
+                app_is_running = False
 
 
             manager.process_events(event)
@@ -52,15 +70,13 @@ def main():
         # Update the label
         clock_label.set_text(current_time_string)
 
-        if is_connected():
-            gps_speed = receive_data()
-        else:
-            gps_speed = 0.0
+        current_speed = latest_gps_speed
+        
         pressed_keys = pygame.key.get_pressed()  #
 
 
         if pressed_keys[pygame.K_UP]:
-            current_speed += .5
+            current_speed += 1
             current_rpm += 100
 
 
@@ -74,7 +90,7 @@ def main():
         manager.update(time_delta)
         manager.draw_ui(screen)
         pygame.display.update()
-        #clock.tick(30)
+        clock.tick(30)
 
     pygame.quit()
 
