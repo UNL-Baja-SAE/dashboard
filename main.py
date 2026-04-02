@@ -49,7 +49,7 @@ except FileNotFoundError:
 clock = pygame.time.Clock()
 
 app_is_running = False
-
+latest_gps_speed = 0
 def gps_worker():
     global latest_gps_speed
 
