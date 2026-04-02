@@ -1,5 +1,6 @@
 import serial
 import pynmea2
+import time
 
 PORT = "/dev/serial0" 
 BAUD = 9600
@@ -7,6 +8,19 @@ BAUD = 9600
 # Initialize globally, but set to None if it fails
 try:
     ser = serial.Serial(PORT, baudrate=BAUD, timeout=0.5)
+
+    ser.write(b'$PUBX,40,GGA,0,0,0,0,0,0*5A\r\n')
+    ser.write(b'$PUBX,40,GSA,0,0,0,0,0,0*4E\r\n')
+    ser.write(b'$PUBX,40,GSV,0,0,0,0,0,0*59\r\n')
+    ser.write(b'$PUBX,40,GLL,0,0,0,0,0,0*5C\r\n')
+    ser.write(b'$PUBX,40,VTG,0,0,0,0,0,0*5E\r\n')
+    
+    # 2. Send the binary UBX command to set the refresh rate to 5Hz (200ms)
+    ser.write(b'\xB5\x62\x06\x08\x06\x00\xC8\x00\x01\x00\x01\x00\xDE\x6A')
+    
+    # Give the module half a second to apply the new settings
+    time.sleep(0.5)
+
 except Exception as e:
     print(f"Failed to connect to GPS on {PORT}: {e}")
     ser = None
