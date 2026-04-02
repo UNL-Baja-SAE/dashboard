@@ -9,6 +9,22 @@ from dash import TextGauge,Gauge, WIDTH, HEIGHT
 pygame.init()
 pygame.font.init()
 
+monitor_info = pygame.display.Info()
+screen_width = monitor_info.current_w
+screen_height = monitor_info.current_h
+
+is_pi = screen_height == HEIGHT and screen_width == WIDTH
+
+if is_pi:
+    screen = pygame.display.set_mode((screen_width, screen_height), pygame.FULLSCREEN)
+    screen = pygame.display.set_mode((WIDTH, HEIGHT),pygame.FULLSCREEN)
+    manager = pygame_gui.UIManager((WIDTH, HEIGHT),theme_path="theme.json")
+
+else:
+    screen = pygame.display.set_mode((WIDTH, HEIGHT))
+    manager = pygame_gui.UIManager((WIDTH, HEIGHT),theme_path="theme.json")
+
+
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 manager = pygame_gui.UIManager((WIDTH, HEIGHT),theme_path="theme.json")
 
@@ -36,13 +52,28 @@ app_is_running = False
 
 def gps_worker():
     global latest_gps_speed
-    while app_is_running:
-        if is_connected():
-            speed = receive_data()
-            if speed is not None:
-                latest_gps_speed = speed
-        else:
-            time.sleep(0.5)
+
+    with open("gps_log.csv", "a") as log_file:
+        
+        # Optional: Write a header column when the script starts
+        log_file.write("Timestamp,Speed_MPH,Latitude,Longitude\n")
+        log_file.flush()
+
+
+        while app_is_running:
+            if is_connected():
+                gps_info = receive_data()
+                if gps_info is not None:
+                    latest_gps_speed = gps_info["speed"]
+
+                    timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                    
+                    # 3. Write the time and speed separated by a comma
+                    log_file.write(f"{timestamp},{gps_info['speed']},{gps_info['lat']},{gps_info['lon']}\n")
+                    log_file.flush()
+
+            else:
+                time.sleep(0.5)
 
 
 def main():
@@ -62,7 +93,9 @@ def main():
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 app_is_running = False
-
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:
+                    pygame.display.set_mode((800, 600))
 
             manager.process_events(event)
         current_time_string = datetime.datetime.now().strftime("%I:%M %p")
@@ -85,8 +118,7 @@ def main():
         screen.fill((0, 0, 0))
         speedo.draw(screen, current_speed)
         tacho.draw(screen, current_rpm)
-        current_speed = current_speed - 0.25 if current_speed > 0.25 else 0
-        current_rpm = current_rpm - 50 if current_rpm > 50 else 0
+        
         manager.update(time_delta)
         manager.draw_ui(screen)
         pygame.display.update()

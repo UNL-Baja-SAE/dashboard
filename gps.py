@@ -34,10 +34,19 @@ def receive_data():
                 if parsed_data.status == 'A':
                     init_speed = parsed_data.spd_over_grnd
                     speed_mph = init_speed * 1.15078
-                    return round(speed_mph, 1) # Rounding is usually best for displays
+                    lat = parsed_data.latitude
+                    lon = parsed_data.longitude
+                    
+                    # Return all the data as a dictionary
+                    return {
+                        "speed": round(speed_mph, 1),
+                        "lat": lat,
+                        "lon": lon
+                    }
                 else:
-                    # GPS is connected but doesn't have a satellite fix yet
-                    return 0.0 
+                    # No satellite fix yet. Return zeros.
+                    return {"speed": 0.0, "lat": 0.0, "lon": 0.0}
+                
 
     except pynmea2.ParseError as e:
         print(f"Parse Error: {e}")
