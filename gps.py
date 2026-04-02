@@ -32,7 +32,7 @@ def receive_data():
     try:
         # Optional: If you notice lag, uncomment the line below to clear old data.
         # ser.reset_input_buffer() 
-        
+        ser.reset_input_buffer()
         # Loop until we specifically find the GPRMC sentence or hit a timeout
         while True:
             read_line = ser.readline().decode('ascii', errors='replace').strip()

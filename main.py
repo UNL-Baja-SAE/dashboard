@@ -53,42 +53,29 @@ latest_gps_speed = 0
 def gps_worker():
     global latest_gps_speed
     
-    print("[GPS LOGGER] Thread started. Opening file...")
     with open("gps_log.csv", "a") as log_file:
-        log_file.write("Timestamp,Speed_MPH,Latitude,Longitude\n") 
-        log_file.flush()
-        
-        last_log_time = 0.0 # Timer for the CSV logger
+        # Header...
+        last_log_time = 0.0 
         
         while app_is_running:
             if is_connected():
                 gps_info = receive_data() 
                 
                 if gps_info is not None:
-                    # Waiting for satellites
-                    if gps_info['lat'] == 0.0 and gps_info['lon'] == 0.0:
-                        current_time = time.time()
-                        if current_time - last_log_time >= 1.0:
-                            print("[GPS STATUS] Waiting for satellite lock...")
-                            last_log_time = current_time
+                    # Update the UI variable (NO PRINTING HERE)
+                    latest_gps_speed = gps_info["speed"]
                     
-                    # Locked onto satellites
-                    else:
-                        # 1. FAST UPDATE: Instantly feed the 5Hz data to Pygame UI
-                        latest_gps_speed = gps_info["speed"]
+                    current_time = time.time()
+                    if current_time - last_log_time >= 1.0:
+                        # Log to file (This is fast)
+                        timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                        log_file.write(f"{timestamp},{gps_info['speed']},{gps_info['lat']},{gps_info['lon']}\n")
+                        log_file.flush() 
                         
-                        # 2. SLOW UPDATE: Check if exactly 1 second has passed for the logger
-                        current_time = time.time()
-                        if current_time - last_log_time >= 1.0:
-                            timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                            
-                            log_file.write(f"{timestamp},{gps_info['speed']},{gps_info['lat']},{gps_info['lon']}\n")
-                            log_file.flush() 
-                            
-                            print(f"[GPS LOGGER] 1Hz Data Logged! Speed: {gps_info['speed']} MPH")
-                            last_log_time = current_time
+                        # Only print once per second so you know it's alive
+                        print(f"Logged @ {gps_info['speed']} MPH")
+                        last_log_time = current_time
             else:
-                print("[GPS ERROR] Cannot communicate with GPS module.")
                 time.sleep(1.0)
 
 
@@ -125,7 +112,8 @@ def main():
         
         # Snap to zero to prevent floating decimals
         if latest_gps_speed == 0.0 and current_speed < 0.5:
-            current_speed = 0.0        
+            current_speed = 0.0       
+             
         pressed_keys = pygame.key.get_pressed()  #
 
 
