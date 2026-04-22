@@ -1,8 +1,3 @@
-import os
-
-# Set the pin factory to pigpio for hardware PWM before importing gpiozero
-os.environ['GPIOZERO_PIN_FACTORY'] = 'pigpio'
-
 from gpiozero import Servo
 from time import sleep
 
@@ -14,10 +9,14 @@ print("Pi 4B + MS24 Test Starting...")
 
 def activate_four_wheel(four_engaged):
     if not four_engaged:
+        print("eaaengaged")
         motor.value = 0.5
+        four_engaged = True
     return four_engaged
 
 def deactive_four_wheel(four_engaged):
     if four_engaged:
+        print("disaaengaged")
         motor.value = -0.5
+        four_engaged = False
     return four_engaged

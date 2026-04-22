@@ -1,10 +1,14 @@
+import os
+os.environ['GPIOZERO_PIN_FACTORY'] = 'pigpio'
 import pygame
 import pygame_gui
 import datetime
 import time
 import threading
+
 from servo_switch import activate_four_wheel, deactive_four_wheel
-from rpm_sensor import get_rpm 
+from rpm_sensor import get_rpm
+from gpiozero import Button
 from gps import receive_data, is_connected
 from dash import TextGauge, Gauge, WIDTH, HEIGHT
 
@@ -15,8 +19,10 @@ monitor_info = pygame.display.Info()
 screen_width = monitor_info.current_w
 screen_height = monitor_info.current_h
 
-screen = pygame.display.set_mode((WIDTH, HEIGHT), pygame.FULLSCREEN)
-manager = pygame_gui.UIManager((WIDTH, HEIGHT), theme_path="theme.json")
+screen = pygame.display.set_mode((WIDTH, HEIGHT))
+base_path = os.path.dirname(os.path.abspath(__file__))
+theme_path = os.path.join(base_path, 'theme.json')
+manager = pygame_gui.UIManager((WIDTH, HEIGHT), theme_path=theme_path)
 
 four_wheel_drive = False
 
@@ -126,7 +132,7 @@ def main():
 
             manager.process_events(event)
             
-        current_time_string = datetime.datetime.now().strftime("%I:%M %p")
+        current_time_string = datetime.datetime.now().strftime("%I:%M:%S %p")
         clock_label.set_text(current_time_string)
 
         # Independent smoothing factors for different gauge responsiveness
@@ -145,12 +151,16 @@ def main():
 
         if pressed_keys[pygame.K_UP]:
             current_speed += 1
-            current_rpm += 100
-
+            current_rpm += 10            
+            
         if toggle_switch.is_pressed and not four_wheel_drive:
+            print("Pressed" + current_time_string)
             if four_wheel_drive != activate_four_wheel(four_wheel_drive):
                 four_wheel_drive = True
+                
         elif not toggle_switch.is_pressed and four_wheel_drive:
+            print("Pressed2")
+
             if four_wheel_drive != deactive_four_wheel(four_wheel_drive):
                 four_wheel_drive = False
 
