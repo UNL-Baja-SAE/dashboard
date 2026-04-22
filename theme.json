@@ -23,5 +23,29 @@
             "shape": "rounded_rectangle",
             "shape_corner_radius": "10"
         }
+    },
+    "#fwd_box_engaged": {
+        "colours": {
+            "dark_bg": "#222222",
+            "normal_text": "#00FF00"
+        },
+        "misc": {
+            "border_width": "2",
+            "text_alignment": "center",
+            "shape": "rounded_rectangle",
+            "shape_corner_radius": "10"
+        }
+    },
+    "#fwd_box_disengaged": {
+        "colours": {
+            "dark_bg": "#222222",
+            "normal_text": "#FF0000"
+        },
+        "misc": {
+            "border_width": "2",
+            "text_alignment": "center",
+            "shape": "rounded_rectangle",
+            "shape_corner_radius": "10"
+        }
     }
 }
