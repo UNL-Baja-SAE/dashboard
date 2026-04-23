@@ -1,16 +1,48 @@
 import os
+import subprocess
+
+# 1. Force the pin factory
 os.environ['GPIOZERO_PIN_FACTORY'] = 'pigpio'
+
+# 2. Restart pigpiod to clear any zombie hardware states
+try:
+    subprocess.run(['sudo', 'killall', 'pigpiod'], capture_output=True)
+    subprocess.run(['sudo', 'pigpiod'], check=True)
+    print("pigpiod daemon restarted successfully.")
+except Exception as e:
+    print(f"Warning: Could not restart pigpiod: {e}")
 import pygame
 import pygame_gui
 import datetime
 import time
 import threading
 
-from servo_switch import activate_four_wheel, deactive_four_wheel
 from rpm_sensor import get_rpm
 from gpiozero import Button
 from gps import receive_data, is_connected
 from dash import TextGauge, Gauge, WIDTH, HEIGHT
+from gpiozero import Servo
+from time import sleep
+
+# MS24 Pulse Widths: 0.5ms to 2.5ms
+# On Pi 4, GPIO 18 is Physical Pin 12
+motor = Servo(18, min_pulse_width=0.0005, max_pulse_width=0.0025)
+
+print("Pi 4B + MS24 Test Starting...")
+
+def activate_four_wheel(four_engaged):
+    if not four_engaged:
+        print("eaaengaged")
+        motor.value = 0.5
+        four_engaged = True
+    return four_engaged
+
+def deactive_four_wheel(four_engaged):
+    if four_engaged:
+        print("disaaengaged")
+        motor.value = -0.5
+        four_engaged = False
+    return four_engaged
 
 pygame.init()
 pygame.font.init()
