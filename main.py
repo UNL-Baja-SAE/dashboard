@@ -204,7 +204,7 @@ def main():
                 if four_wheel_drive != deactive_four_wheel(four_wheel_drive):
                     four_wheel_drive = False
         else:
-            if not toggle_switch.is_pressed and four_wheel_drive:
+            if not toggle_switch.is_pressed:
                 clean_start = True
                 last_fwd_state = None
                 four_wheel_drive= False
