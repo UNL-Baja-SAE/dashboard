@@ -26,21 +26,21 @@ from time import sleep
 
 # MS24 Pulse Widths: 0.5ms to 2.5ms
 # On Pi 4, GPIO 18 is Physical Pin 12
-motor = Servo(18, min_pulse_width=0.0005, max_pulse_width=0.0025)
+motor = Servo(18, min_pulse_width=0.0005, max_pulse_width=0.0025,initial_value=-0.25)
 
 print("Pi 4B + MS24 Test Starting...")
 
 def activate_four_wheel(four_engaged):
     if not four_engaged:
         print("eaaengaged")
-        motor.value = 0.5
+        motor.value = 0.25
         four_engaged = True
     return four_engaged
 
 def deactive_four_wheel(four_engaged):
     if four_engaged:
         print("disaaengaged")
-        motor.value = -0.5
+        motor.value = -0.25
         four_engaged = False
     return four_engaged
 
@@ -132,6 +132,7 @@ def main():
     global l_button
     global app_is_running
     global four_wheel_drive
+    global clean_start
 
     deactive_four_wheel(True)
 
@@ -205,6 +206,8 @@ def main():
         else:
             if not toggle_switch.is_pressed and four_wheel_drive:
                 clean_start = True
+                last_fwd_state = None
+                four_wheel_drive= False
 
         
         if four_wheel_drive != last_fwd_state:
@@ -214,7 +217,7 @@ def main():
             if not clean_start:
                 new_text = "FLIP TO DISENAGE"
                 new_id = "#fwd_box_disengaged" 
-            if four_wheel_drive:
+            elif four_wheel_drive:
                 new_text = "Engaged"
                 new_id = "#fwd_box_engaged"  
             else:
