@@ -58,6 +58,8 @@ manager = pygame_gui.UIManager((WIDTH, HEIGHT), theme_path=theme_path)
 
 four_wheel_drive = False
 
+clean_start = False
+
 r_button = Button(17, pull_up=True)
 l_button = Button(27, pull_up=True)
 toggle_switch = Button(22, pull_up=True)
@@ -130,7 +132,12 @@ def main():
     global l_button
     global app_is_running
     global four_wheel_drive
-    
+
+    deactive_four_wheel(True)
+
+    if not toggle_switch.is_pressed:
+        clean_start = True
+
     app_is_running = True
     current_speed = 0.0
     current_rpm = 0.0
@@ -184,23 +191,29 @@ def main():
         if pressed_keys[pygame.K_UP]:
             current_speed += 1
             current_rpm += 10            
-            
-        if toggle_switch.is_pressed and not four_wheel_drive:
-            print("Pressed" + current_time_string)
-            if four_wheel_drive != activate_four_wheel(four_wheel_drive):
-                four_wheel_drive = True
+        if clean_start:
+            if toggle_switch.is_pressed and not four_wheel_drive:
+                print("Pressed" + current_time_string)
+                if four_wheel_drive != activate_four_wheel(four_wheel_drive):
+                    four_wheel_drive = True
                 
-        elif not toggle_switch.is_pressed and four_wheel_drive:
-            print("Pressed2")
+            elif not toggle_switch.is_pressed and four_wheel_drive:
+                print("Pressed2")
 
-            if four_wheel_drive != deactive_four_wheel(four_wheel_drive):
-                four_wheel_drive = False
+                if four_wheel_drive != deactive_four_wheel(four_wheel_drive):
+                    four_wheel_drive = False
+        else:
+            if not toggle_switch.is_pressed and four_wheel_drive:
+                clean_start = True
 
+        
         if four_wheel_drive != last_fwd_state:
             
             if fwd_label:
                 fwd_label.kill()
-            
+            if not clean_start:
+                new_text = "FLIP TO DISENAGE"
+                new_id = "#fwd_box_disengaged" 
             if four_wheel_drive:
                 new_text = "Engaged"
                 new_id = "#fwd_box_engaged"  
