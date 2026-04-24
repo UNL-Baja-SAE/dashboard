@@ -1,51 +1,43 @@
-import serial
 import time
+from gpiozero import Button
 
-SERIAL_PORT = '/dev/serial0' 
-BAUD_RATE = 9600
+# --- Configuration ---
+HALL_PIN = 16
+MAGNETS_PER_REV = 1
 
+# --- State Variables ---
 current_rpm = 0.0
-last_data_time = time.time()
-ser = None
+last_pulse_time = time.time()
 
-def init_serial():
-    global ser
-    try:
-        ser = serial.Serial(SERIAL_PORT, BAUD_RATE, timeout=0.1)
-    except (serial.SerialException, OSError) as e:
-        # Fails silently or with a simple print, but doesn't crash main
-        print(f"Hall effect sensor not found on {SERIAL_PORT}. RPM will stay at 0.")
-        ser = None
+def pulse_callback():
+    """Triggered automatically when the magnet passes (sensor goes LOW)."""
+    global current_rpm, last_pulse_time
+    
+    current_time = time.time()
+    time_diff = current_time - last_pulse_time
+    
+    # RPM = (60 seconds / time taken for 1 pulse) / number of magnets
+    current_rpm = (60.0 / time_diff) / MAGNETS_PER_REV
+    last_pulse_time = current_time
 
-# Run once on import
-init_serial()
+# Initialize the sensor
+# pull_up=True ensures the internal pull-up resistor is active
+# bounce_time=0.005 ignores duplicate erratic signals within 5 milliseconds
+try:
+    sensor = Button(HALL_PIN, pull_up=True, bounce_time=0.005)
+    
+    # 'when_pressed' triggers on a falling edge (3.3V dropping to 0V)
+    sensor.when_pressed = pulse_callback
+except Exception as e:
+    print(f"Failed to initialize sensor on GPIO {HALL_PIN}: {e}")
+    sensor = None
 
 def get_rpm():
-    global current_rpm, last_data_time, ser
+    """Returns the current RPM, resetting to 0 if rotation stops."""
+    global current_rpm, last_pulse_time
     
-    # If serial failed to open, just return 0.0 safely
-    if ser is None:
-        return 0.0
-
-    try:
-        if ser.is_open:
-            while ser.in_waiting > 0:
-                line = ser.readline().decode('utf-8', errors='ignore').strip()
-                
-                if line:
-                    try:
-                        current_rpm = float(line)
-                        last_data_time = time.time()
-                    except ValueError:
-                        pass # Ignore malformed strings
-            
-            # Reset to 0 if no data received for 1 second
-            if time.time() - last_data_time > 1.0:
-                current_rpm = 0.0
-                
-    except (serial.SerialException, OSError):
-        # If the sensor is unplugged while running
-        ser = None 
+    # Reset to 0 if no pulse is received for 1 second
+    if time.time() - last_pulse_time > 1.0:
         current_rpm = 0.0
-            
+        
     return current_rpm
