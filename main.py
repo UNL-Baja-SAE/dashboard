@@ -18,7 +18,7 @@ import time
 import threading
 
 from rpm_sensor import get_rpm
-from gpiozero import Button
+from gpiozero import Button, CPUTemperature
 from gps import receive_data, is_connected
 from dash import TextGauge, Gauge, WIDTH, HEIGHT
 from gpiozero import Servo
@@ -50,8 +50,9 @@ pygame.font.init()
 monitor_info = pygame.display.Info()
 screen_width = monitor_info.current_w
 screen_height = monitor_info.current_h
+cpu = CPUTemperature()
 
-screen = pygame.display.set_mode((WIDTH, HEIGHT))
+screen = pygame.display.set_mode((WIDTH, HEIGHT),pygame.FULLSCREEN)
 base_path = os.path.dirname(os.path.abspath(__file__))
 theme_path = os.path.join(base_path, 'theme.json')
 manager = pygame_gui.UIManager((WIDTH, HEIGHT), theme_path=theme_path)
@@ -68,6 +69,14 @@ time_rect = pygame.Rect((WIDTH // 2 - 75, 10), (150, 40))
 clock_label = pygame_gui.elements.UILabel(
     relative_rect=time_rect,
     text="--:--",
+    manager=manager,
+    object_id="#clock_box"
+)
+
+temp_rect = pygame.Rect((WIDTH // 2 - 300, 10), (150, 40))
+temp_label = pygame_gui.elements.UILabel(
+    relative_rect=temp_rect,
+    text=f"CPU Temp: {cpu.temperature} °C",
     manager=manager,
     object_id="#clock_box"
 )
@@ -174,7 +183,7 @@ def main():
             
         current_time_string = datetime.datetime.now().strftime("%I:%M:%S %p")
         clock_label.set_text(current_time_string)
-
+        temp_label.set_text(f"CPU Temp: {cpu.temperature:.0f} °C")
         # Independent smoothing factors for different gauge responsiveness
         speed_smoothing = 5.0  # Slower, smoother needle for GPS speed
         rpm_smoothing = 15.0   # Faster, snappier needle for Hall effect RPM
