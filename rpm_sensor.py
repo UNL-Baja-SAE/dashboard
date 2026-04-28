@@ -43,7 +43,6 @@ class RPMDevice:
             sensor = None
     def pulse_callback(self):
         """Triggered automatically when the magnet passes (sensor goes LOW)."""
-        global current_rpm, last_pulse_time
     
         current_time = time.time()
         time_diff = current_time - self.last_pulse_time
@@ -58,7 +57,7 @@ class RPMDevice:
         if time.time() - self.last_pulse_time > 1.0:
             self.current_rpm = 0.0
         
-        return current_rpm
+        return self.current_rpm
 
 def rpm_worker(rpm_data, stop_event):
     device = RPMDevice()
