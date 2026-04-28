@@ -16,147 +16,140 @@ import pygame_gui
 import datetime
 import time
 import threading
-
-from rpm_sensor import get_rpm
+from gps import gps_worker, SharedGPSData
+from rpm_sensor import rpm_worker, SharedRPMData
 from gpiozero import Button, CPUTemperature
 from gps import receive_data, is_connected
 from dash import TextGauge, Gauge, WIDTH, HEIGHT
 from gpiozero import Servo
 from time import sleep
+from stopwatch import Stopwatch
+
 
 # MS24 Pulse Widths: 0.5ms to 2.5ms
 # On Pi 4, GPIO 18 is Physical Pin 12
-motor = Servo(18, min_pulse_width=0.0005, max_pulse_width=0.0025,initial_value=-0.25)
 
 print("Pi 4B + MS24 Test Starting...")
 
-def activate_four_wheel(four_engaged):
+def activate_four_wheel(four_engaged,motor):
     if not four_engaged:
         print("eaaengaged")
         motor.value = 0.25
         four_engaged = True
     return four_engaged
 
-def deactive_four_wheel(four_engaged):
+def deactive_four_wheel(four_engaged,motor):
     if four_engaged:
         print("disaaengaged")
         motor.value = -0.25
         four_engaged = False
     return four_engaged
 
-pygame.init()
-pygame.font.init()
 
-monitor_info = pygame.display.Info()
-screen_width = monitor_info.current_w
-screen_height = monitor_info.current_h
-cpu = CPUTemperature()
-
-screen = pygame.display.set_mode((WIDTH, HEIGHT),pygame.FULLSCREEN)
-base_path = os.path.dirname(os.path.abspath(__file__))
-theme_path = os.path.join(base_path, 'theme.json')
-manager = pygame_gui.UIManager((WIDTH, HEIGHT), theme_path=theme_path)
-
-four_wheel_drive = False
-
-clean_start = False
-
-r_button = Button(26, pull_up=True)
-l_button = Button(19, pull_up=True)
-toggle_switch = Button(21, pull_up=True)
-print(r_button.is_pressed,l_button.is_pressed, toggle_switch.is_pressed)
-time_rect = pygame.Rect((WIDTH // 2 - 75, 10), (150, 40))
-clock_label = pygame_gui.elements.UILabel(
-    relative_rect=time_rect,
-    text="--:--",
-    manager=manager,
-    object_id="#clock_box"
-)
-
-temp_rect = pygame.Rect((WIDTH // 2 - 300, 10), (150, 40))
-temp_label = pygame_gui.elements.UILabel(
-    relative_rect=temp_rect,
-    text=f"CPU Temp: {cpu.temperature} °C",
-    manager=manager,
-    object_id="#clock_box"
-)
-
-fwd_rect = pygame.Rect((WIDTH // 2 +100, 10), (150, 40))
-
-
-try:
-    custom_font = pygame.font.Font('fonts/Russo_One/RussoOne-Regular.ttf', 90)
-    font = pygame.font.Font('fonts/Russo_One/RussoOne-Regular.ttf', 18)
-
-except FileNotFoundError:
-    print("CustomFont.ttf not found. Using default font.")
-    custom_font = pygame.font.Font(None, 90)
-    font = pygame.font.SysFont(None, 30)
-
-clock = pygame.time.Clock()
-
-app_is_running = False
-latest_gps_speed = 0.0
-latest_rpm = 0.0
-
-def gps_worker():
-    global latest_gps_speed
-    
-    while app_is_running:
-        try:
-            if is_connected():
-                gps_info = receive_data() 
-                
-                if gps_info is not None:
-                    latest_gps_speed = gps_info["speed"]
-            else:
-                time.sleep(1.0)
-                
-        except Exception as e:
-            print(f"GPS Worker Error: {e}")
-            time.sleep(1.0) 
-        
-        # GPS is slow, check at 20Hz
-        time.sleep(0.05)
-
-def rpm_worker():
-    global latest_rpm
-    
-    while app_is_running:
-        try:
-            new_rpm = get_rpm()
-            if new_rpm is not None:
-                latest_rpm = new_rpm
-                
-        except Exception as e:
-            print(f"RPM Worker Error: {e}")
-            time.sleep(1.0) 
-            
-        # Hall sensor is fast, poll at 100Hz
-        time.sleep(0.01)
 
 def main():
-    global toggle_switch
-    global r_button
-    global l_button
-    global app_is_running
-    global four_wheel_drive
-    global clean_start
 
-    deactive_four_wheel(True)
+    motor = Servo(18, min_pulse_width=0.0005, max_pulse_width=0.0025,initial_value=-0.25)
+
+    r_button = Button(3, pull_up=True)
+
+    #Power off button
+    l_button = Button(19, pull_up=True)
+    toggle_switch = Button(21, pull_up=True)
+    print(r_button.is_pressed,l_button.is_pressed, toggle_switch.is_pressed)
+    pygame.init()
+    pygame.font.init()
+    pygame.mouse.set_visible(False)
+
+
+    monitor_info = pygame.display.Info()
+    screen_width = monitor_info.current_w
+    screen_height = monitor_info.current_h
+    cpu = CPUTemperature()
+
+    screen = pygame.display.set_mode((WIDTH, HEIGHT),pygame.FULLSCREEN)
+    base_path = os.path.dirname(os.path.abspath(__file__))
+    theme_path = os.path.join(base_path, 'theme.json')
+    manager = pygame_gui.UIManager((WIDTH, HEIGHT), theme_path=theme_path)
+
+
+
+
+    time_rect = pygame.Rect((WIDTH // 2 - 75, 10), (150, 40))
+    clock_label = pygame_gui.elements.UILabel(
+        relative_rect=time_rect,
+        text="--:--",
+        manager=manager,
+        object_id="#clock_box"
+    )
+    lap_rect = pygame.Rect((WIDTH // 2 - 75, HEIGHT-100), (150, 40))
+    lap_label = pygame_gui.elements.UILabel(
+        relative_rect=lap_rect,
+        text="--:--",
+        manager=manager,
+        object_id="#lap_label"
+    )
+
+    best_lap_rect = pygame.Rect((WIDTH // 2 - 75, HEIGHT-60), (150, 40))
+    best_lap_label = pygame_gui.elements.UILabel(
+        relative_rect=best_lap_rect,
+        text="--:--",
+        manager=manager,
+        object_id="#best_lap_label"
+    )
+    timer = Stopwatch()
+    l_button.when_pressed = timer.toggle
+    r_button.when_pressed = timer.new_lap
+    temp_rect = pygame.Rect((WIDTH // 2 - 300, 10), (150, 40))
+    temp_label = pygame_gui.elements.UILabel(
+        relative_rect=temp_rect,
+        text=f"CPU Temp: {cpu.temperature} °C",
+        manager=manager,
+        object_id="#clock_box"
+    )
+
+    fwd_rect = pygame.Rect((WIDTH // 2 +100, 10), (150, 40))
+    shutdown_rect = pygame.Rect((WIDTH // 2, HEIGHT // 2), (150, 40))
+
+    try:
+        custom_font = pygame.font.Font('fonts/Russo_One/RussoOne-Regular.ttf', 90)
+        font = pygame.font.Font('fonts/Russo_One/RussoOne-Regular.ttf', 18)
+
+    except FileNotFoundError:
+        print("CustomFont.ttf not found. Using default font.")
+        custom_font = pygame.font.Font(None, 90)
+        font = pygame.font.SysFont(None, 30)
+
+    clock = pygame.time.Clock()
+
+
+    four_wheel_drive = False
+    clean_start = False
+    deactive_four_wheel(True,motor)
 
     if not toggle_switch.is_pressed:
         clean_start = True
-
+    shuttting_down = False
     app_is_running = True
     current_speed = 0.0
     current_rpm = 0.0
-    
-    gps_thread = threading.Thread(target=gps_worker, daemon=True)
+    latest_gps_speed = 0.0
+    latest_rpm = 0.0
+    gps_data = SharedGPSData()
+    stop_event = threading.Event()
+    gps_thread = threading.Thread(
+        target=gps_worker, 
+        args=(gps_data, stop_event),
+        daemon=True)  
     gps_thread.start()
-    
-    rpm_thread = threading.Thread(target=rpm_worker, daemon=True)
+
+    rpm_data = SharedRPMData()
+    rpm_thread = threading.Thread(
+        target=rpm_worker, 
+        args=(rpm_data, stop_event),
+        daemon=True) 
     rpm_thread.start()
+    
     
     speedo = TextGauge(WIDTH, HEIGHT, center_x=200, center_y=240, radius=160, max_value=55, font=font,
                        custom_font=custom_font, gap_width=35)
@@ -180,14 +173,18 @@ def main():
                     pygame.display.set_mode((800, 600))
 
             manager.process_events(event)
-            
+        if l_button.held_time is not None and l_button.held_time > 3:
+            timer.reset()
         current_time_string = datetime.datetime.now().strftime("%I:%M:%S %p")
         clock_label.set_text(current_time_string)
         temp_label.set_text(f"CPU Temp: {cpu.temperature:.0f} °C")
+        lap_label.set_text(timer.get_lap_time())
+        best_lap_label.set_text(timer.get_fastest_lap())
         # Independent smoothing factors for different gauge responsiveness
         speed_smoothing = 5.0  # Slower, smoother needle for GPS speed
         rpm_smoothing = 15.0   # Faster, snappier needle for Hall effect RPM
-        
+        latest_gps_speed = gps_data.get_speed()
+        latest_rpm = rpm_data.get_rpm()
         current_speed += (latest_gps_speed - current_speed) * (speed_smoothing * time_delta)
         current_rpm += (latest_rpm - current_rpm) * (rpm_smoothing * time_delta)
         
@@ -196,21 +193,17 @@ def main():
         if latest_rpm == 0.0 and current_rpm < 50.0:
             current_rpm = 0.0
              
-        pressed_keys = pygame.key.get_pressed()  
 
-        if pressed_keys[pygame.K_UP]:
-            current_speed += 1
-            current_rpm += 10            
         if clean_start:
             if toggle_switch.is_pressed and not four_wheel_drive:
                 print("Pressed" + current_time_string)
-                if four_wheel_drive != activate_four_wheel(four_wheel_drive):
+                if four_wheel_drive != activate_four_wheel(four_wheel_drive,motor):
                     four_wheel_drive = True
                 
             elif not toggle_switch.is_pressed and four_wheel_drive:
                 print("Pressed2")
 
-                if four_wheel_drive != deactive_four_wheel(four_wheel_drive):
+                if four_wheel_drive != deactive_four_wheel(four_wheel_drive,motor):
                     four_wheel_drive = False
         else:
             if not toggle_switch.is_pressed:
@@ -241,6 +234,28 @@ def main():
             )
             
             last_fwd_state = four_wheel_drive
+        if r_button.is_pressed:
+            if r_button.held_time is not None and r_button.held_time > 1:
+                if not shuttting_down:
+                    shuttting_down = True
+                
+                    shutdown_label = pygame_gui.elements.UILabel(
+                    relative_rect=shutdown_rect,
+                    text="Shutting Down in 3",
+                    manager=manager,
+                    object_id="#shutdown_label"
+                    )
+                else:
+                    if r_button.held_time > 4:
+                        app_is_running = False
+                    else:
+                        countdown = 4.0 - r_button.held_time
+                        shutdown_label.set_text(f'Shutting Down in {countdown:.0f}')
+            else:
+                if shuttting_down:
+                    shuttting_down = False
+                    shutdown_label.kill()
+
         screen.fill((0, 0, 0))
         speedo.draw(screen, current_speed)
         tacho.draw(screen, current_rpm)
@@ -248,8 +263,9 @@ def main():
         manager.update(time_delta)
         manager.draw_ui(screen)
         pygame.display.update()
-
+    stop_event.set()
     pygame.quit()
+    subprocess.run(['sudo', 'shutdown', '-h', 'now'])
 
 if __name__ == "__main__":
     main()

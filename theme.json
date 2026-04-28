@@ -1,48 +1,81 @@
 {
-    "button": {
-        "colours": {
-            "normal_border": "White",
-            "normal_bg": "#C2558F9F",
-            "normal_text": "White"
-        },
-        "misc": {
-            "shape": "rounded_rectangle",
-            "shape_corner_radius": "10",
-            "border_width": "2"
-        }
-    },
     "#clock_box": {
         "colours": {
-            "dark_bg": "#222222",
+            "dark_bg": "#000000",
             "normal_border": "#FFFFFF",
             "normal_text": "#FFFFFF"
         },
         "misc": {
-            "border_width": "2",
+            "border_width": "3",
             "text_alignment": "center",
             "shape": "rounded_rectangle",
-            "shape_corner_radius": "10"
+            "shape_corner_radius": "8"
         }
     },
     "#fwd_box_engaged": {
         "colours": {
-            "dark_bg": "#222222",
-            "normal_text": "#00FF00"
+            "dark_bg": "#00FF00",
+            "normal_bg": "#00FF00",
+            "normal_text": "#000000"
+        },
+        "font": {
+            "name": "noto sans display",
+            "size": "24",
+            "bold": "1"
         },
         "misc": {
-            "border_width": "2",
             "text_alignment": "center",
             "shape": "rounded_rectangle",
-            "shape_corner_radius": "10"
+            "shape_corner_radius": "8"
         }
     },
     "#fwd_box_disengaged": {
         "colours": {
-            "dark_bg": "#222222",
-            "normal_text": "#FF0000"
+            "dark_bg": "#FF0000",
+            "normal_bg": "#FF0000",
+            "normal_text": "#000000"
+        },
+        "font": {
+            "name": "noto sans display",
+            "size": "24",
+            "bold": "1"
         },
         "misc": {
-            "border_width": "2",
+            "text_alignment": "center",
+            "shape": "rounded_rectangle",
+            "shape_corner_radius": "8"
+        }
+    },
+    "#best_lap_label": {
+        "colours": {
+            "dark_bg": "#00FF00",
+            "normal_bg": "#00FF00",
+            "normal_text": "#000000"
+        },
+        "font": {
+            "name": "noto sans display",
+            "size": "24",
+            "bold": "1"
+        },
+        "misc": {
+            "text_alignment": "center",
+            "shape": "rounded_rectangle",
+            "shape_corner_radius": "8"
+        }
+    },
+    "#shutdown_label": {
+        "colours": {
+            "dark_bg": "#FFFF00",
+            "normal_bg": "#FFFF00",
+            "normal_text": "#000000"
+        },
+        "font": {
+            "name": "noto sans display",
+            "size": "32",
+            "bold": "1",
+            "antialiased": "1"
+        },
+        "misc": {
             "text_alignment": "center",
             "shape": "rounded_rectangle",
             "shape_corner_radius": "10"

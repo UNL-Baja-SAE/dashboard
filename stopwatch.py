@@ -38,8 +38,21 @@ class Stopwatch:
             print(self.get_fastest_lap())
 
     def get_lap_time(self):
-        current_elapsed = time.monotonic() - self.start_time
+        if self.start_time == 0.0:
+            current_elapsed = 0
+        else:
+            if self.running:
+                current_elapsed = time.monotonic() - self.start_time
+            else:
+                current_elapsed =self.pause_time
         return self.convert_time(current_elapsed)
+    
+    def reset(self):
+        self.running = False
+        self.start_time = 0.0
+        self.laps = []
+        self.pause_time = 0.0
+        self.last_lap_end_time = 0.0
 
     @staticmethod
     def convert_time(time):
@@ -50,6 +63,7 @@ class Stopwatch:
         time_string = f"{int(hours):02}:{int(minutes):02}:{int(seconds):02}.{milliseconds:03}"
 
         return time_string
+    
     def get_fastest_lap(self):
         if len(self.laps) == 0:
             return "--:--:--.---"
