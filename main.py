@@ -64,7 +64,7 @@ clean_start = False
 r_button = Button(26, pull_up=True)
 l_button = Button(19, pull_up=True)
 toggle_switch = Button(21, pull_up=True)
-
+print(r_button.is_pressed,l_button.is_pressed, toggle_switch.is_pressed)
 time_rect = pygame.Rect((WIDTH // 2 - 75, 10), (150, 40))
 clock_label = pygame_gui.elements.UILabel(
     relative_rect=time_rect,
