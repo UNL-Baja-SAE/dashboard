@@ -61,9 +61,9 @@ four_wheel_drive = False
 
 clean_start = False
 
-r_button = Button(17, pull_up=True)
-l_button = Button(27, pull_up=True)
-toggle_switch = Button(22, pull_up=True)
+r_button = Button(26, pull_up=True)
+l_button = Button(19, pull_up=True)
+toggle_switch = Button(21, pull_up=True)
 
 time_rect = pygame.Rect((WIDTH // 2 - 75, 10), (150, 40))
 clock_label = pygame_gui.elements.UILabel(
