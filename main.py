@@ -50,10 +50,10 @@ def main():
 
     motor = Servo(18, min_pulse_width=0.0005, max_pulse_width=0.0025,initial_value=-0.25)
 
-    r_button = Button(3, pull_up=True)
+    r_button = Button(3, pull_up=True,bounce_time=0.1)
 
     #Power off button
-    l_button = Button(19, pull_up=True)
+    l_button = Button(19, pull_up=True,bounce_time=0.1)
     toggle_switch = Button(21, pull_up=True)
     print(r_button.is_pressed,l_button.is_pressed, toggle_switch.is_pressed)
     pygame.init()
