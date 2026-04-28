@@ -50,7 +50,7 @@ def main():
 
     motor = Servo(18, min_pulse_width=0.0005, max_pulse_width=0.0025,initial_value=-0.25)
 
-    r_button = Button(3, pull_up=True,bounce_time=0.1)
+    r_button = Button(3, pull_up=True,)
 
     #Power off button
     l_button = Button(19, pull_up=True,bounce_time=0.1)
@@ -69,7 +69,26 @@ def main():
     screen = pygame.display.set_mode((WIDTH, HEIGHT),pygame.FULLSCREEN)
     base_path = os.path.dirname(os.path.abspath(__file__))
     theme_path = os.path.join(base_path, 'theme.json')
-    manager = pygame_gui.UIManager((WIDTH, HEIGHT), theme_path=theme_path)
+    
+    # 1. Point directly to the BOLD file
+    bold_font_path = os.path.join(base_path, 'fonts','NotoSansDisplay', 'NotoSansDisplay_Condensed-Bold.ttf')
+    
+    # 2. Create the manager WITHOUT the theme path yet
+    manager = pygame_gui.UIManager((WIDTH, HEIGHT))
+    
+    # 3. Add the font. Notice we assign the BOLD file to the 'regular_path'
+    manager.add_font_paths(font_name="dash_bold", 
+                           regular_path=bold_font_path)
+
+    # 4. Preload it as 'regular'
+    manager.preload_fonts([
+        {'name': 'dash_bold', 'point_size': 24, 'style': 'regular'},
+        {'name': 'dash_bold', 'point_size': 16, 'style': 'regular'}
+    ])
+
+    # 5. NOW load the theme
+    if os.path.exists(theme_path):
+        manager.get_theme().load_theme(theme_path)
 
 
 
@@ -99,7 +118,7 @@ def main():
     timer = Stopwatch()
     l_button.when_pressed = timer.toggle
     r_button.when_pressed = timer.new_lap
-    temp_rect = pygame.Rect((WIDTH // 2 - 300, 10), (150, 40))
+    temp_rect = pygame.Rect((WIDTH // 2 - 275, 10), (150, 40))
     temp_label = pygame_gui.elements.UILabel(
         relative_rect=temp_rect,
         text=f"CPU Temp: {cpu.temperature} °C",
@@ -107,7 +126,7 @@ def main():
         object_id="#clock_box"
     )
 
-    fwd_rect = pygame.Rect((WIDTH // 2 +100, 10), (150, 40))
+    fwd_rect = pygame.Rect((WIDTH // 2 + 125, 10), (150, 40))
     shutdown_rect = pygame.Rect((WIDTH // 2, HEIGHT // 2), (150, 40))
 
     try:

@@ -5,6 +5,10 @@
             "normal_border": "#FFFFFF",
             "normal_text": "#FFFFFF"
         },
+         "font": {
+            "name": "dash_bold",
+            "size": "16"
+        },
         "misc": {
             "border_width": "3",
             "text_alignment": "center",
@@ -19,9 +23,8 @@
             "normal_text": "#000000"
         },
         "font": {
-            "name": "notosans",
-            "size": "24",
-            "bold": "1"
+            "name": "dash_bold",
+            "size": "24"
         },
         "misc": {
             "text_alignment": "center",
@@ -36,9 +39,8 @@
             "normal_text": "#000000"
         },
         "font": {
-            "name": "notosans",
-            "size": "24",
-            "bold": "1"
+            "name": "dash_bold",
+            "size": "24"
         },
         "misc": {
             "text_alignment": "center",
@@ -53,9 +55,23 @@
             "normal_text": "#000000"
         },
         "font": {
-            "name": "notosans",
-            "size": "24",
-            "bold": "1"
+            "name": "dash_bold",
+            "size": "24"
+        },
+        "misc": {
+            "text_alignment": "center",
+            "shape": "rounded_rectangle",
+            "shape_corner_radius": "8"
+        }
+    },"#lap_label": {
+        "colours": {
+            "dark_bg": "#000000",
+            "normal_bg": "#000000",
+            "normal_text": "#FFFFFF"
+        },
+        "font": {
+            "name": "dash_bold",
+            "size": "24"
         },
         "misc": {
             "text_alignment": "center",
@@ -70,9 +86,8 @@
             "normal_text": "#000000"
         },
         "font": {
-            "name": "noto sans display",
-            "size": "32",
-            "bold": "1",
+            "name": "dash_bold",
+            "size": "24",
             "antialiased": "1"
         },
         "misc": {
