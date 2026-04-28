@@ -19,7 +19,6 @@ import threading
 from gps import gps_worker, SharedGPSData
 from rpm_sensor import rpm_worker, SharedRPMData
 from gpiozero import Button, CPUTemperature
-from gps import receive_data, is_connected
 from dash import TextGauge, Gauge, WIDTH, HEIGHT
 from gpiozero import Servo
 from time import sleep
@@ -129,7 +128,7 @@ def main():
 
     if not toggle_switch.is_pressed:
         clean_start = True
-    shuttting_down = False
+    shutting_down = False
     app_is_running = True
     current_speed = 0.0
     current_rpm = 0.0
@@ -236,8 +235,8 @@ def main():
             last_fwd_state = four_wheel_drive
         if r_button.is_pressed:
             if r_button.held_time is not None and r_button.held_time > 1:
-                if not shuttting_down:
-                    shuttting_down = True
+                if not shutting_down:
+                    shutting_down = True
                 
                     shutdown_label = pygame_gui.elements.UILabel(
                     relative_rect=shutdown_rect,
@@ -252,8 +251,8 @@ def main():
                         countdown = 4.0 - r_button.held_time
                         shutdown_label.set_text(f'Shutting Down in {countdown:.0f}')
             else:
-                if shuttting_down:
-                    shuttting_down = False
+                if shutting_down:
+                    shutting_down = False
                     shutdown_label.kill()
 
         screen.fill((0, 0, 0))
@@ -265,7 +264,8 @@ def main():
         pygame.display.update()
     stop_event.set()
     pygame.quit()
-    subprocess.run(['sudo', 'shutdown', '-h', 'now'])
+    if shutting_down:
+        subprocess.run(['sudo', 'shutdown', '-h', 'now'])
 
 if __name__ == "__main__":
     main()
