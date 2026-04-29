@@ -50,7 +50,7 @@ def main():
 
     motor = Servo(18, min_pulse_width=0.0005, max_pulse_width=0.0025,initial_value=-0.25)
 
-    r_button = Button(3, pull_up=True,)
+    r_button = Button(3, pull_up=True,bounce_time = 0.1)
 
     #Power off button
     l_button = Button(19, pull_up=True,bounce_time=0.1)
@@ -127,7 +127,7 @@ def main():
     )
 
     fwd_rect = pygame.Rect((WIDTH // 2 + 125, 10), (150, 40))
-    shutdown_rect = pygame.Rect((WIDTH // 2, HEIGHT // 2), (150, 40))
+    shutdown_rect = pygame.Rect((WIDTH // 2 -150, HEIGHT // 2-50), (300, 100))
 
     try:
         custom_font = pygame.font.Font('fonts/Russo_One/RussoOne-Regular.ttf', 90)
@@ -235,7 +235,7 @@ def main():
             if fwd_label:
                 fwd_label.kill()
             if not clean_start:
-                new_text = "FLIP TO DISENAGE"
+                new_text = "Flip Switch"
                 new_id = "#fwd_box_disengaged" 
             elif four_wheel_drive:
                 new_text = "Engaged"
@@ -269,10 +269,10 @@ def main():
                     else:
                         countdown = 4.0 - r_button.held_time
                         shutdown_label.set_text(f'Shutting Down in {countdown:.0f}')
-            else:
-                if shutting_down:
-                    shutting_down = False
-                    shutdown_label.kill()
+        else:
+            if shutting_down:
+                shutting_down = False
+                shutdown_label.kill()
 
         screen.fill((0, 0, 0))
         speedo.draw(screen, current_speed)
