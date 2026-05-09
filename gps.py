@@ -43,20 +43,17 @@ class GPSDevice:
             time.sleep(0.5)
 
             # Change to 38400
-            self.ser.write(bytearray([0xB5,0x62,0x06,0x00,0x14,0x00,0x01,0x00,0x00,0x00,0xD0,0x08,0x00,0x00,0x00,0x96,0x00,0x00,0x07,0x00,0x03,0x00,0x00,0x00,0x00,0x00,0x93,0xC8]))
-            self.ser.flush()
-            time.sleep(0.1)
+            #self.ser.write(bytearray([0xB5,0x62,0x06,0x00,0x14,0x00,0x01,0x00,0x00,0x00,0xD0,0x08,0x00,0x00,0x00,0x96,0x00,0x00,0x07,0x00,0x03,0x00,0x00,0x00,0x00,0x00,0x93,0xC8]))
+            #self.ser.flush()
+            #time.sleep(0.1)
             
-            self.ser.baudrate = 38400
-            time.sleep(0.1)
+            #self.ser.baudrate = 38400
+            #time.sleep(0.1)
 
             # 5Hz Update rate
-            self.ser.write(bytearray([0xB5,0x62,0x06,0x08,0x06,0x00,0xC8,0x00,0x01,0x00,0x01,0x00,0xDE,0x6A]))
+            #self.ser.write(bytearray([0xB5,0x62,0x06,0x08,0x06,0x00,0xC8,0x00,0x01,0x00,0x01,0x00,0xDE,0x6A]))
             
-            # Disable extra sentences
-            self.ser.write(b'$PUBX,40,GLL,0,0,0,0,0,0*5C\r\n')
-            self.ser.write(b'$PUBX,40,GSV,0,0,0,0,0,0*59\r\n')
-            self.ser.write(b'$PUBX,40,GSA,0,0,0,0,0,0*4E\r\n')
+    
             
             print("GPS Configured: 5Hz @ 38400 Baud")
         except Exception as e:
@@ -82,20 +79,16 @@ class GPSDevice:
         self.time_synced = True
 
     def receive_data(self):
+        
         if not self.is_connected():
+            print("self is not connected")
             return None
 
         try:
             read_line = self.ser.readline().decode('ascii', errors='replace').strip()
-            if not read_line:
-                return None
-                
             if read_line.startswith('$GPRMC'):
                 parsed_data = pynmea2.parse(read_line)
                 
-                if not self.time_synced:
-                    self.sync_time(parsed_data)
-                    
                 if parsed_data.status == 'A':
                     speed_mph = (parsed_data.spd_over_grnd or 0) * 1.15078
                     return {

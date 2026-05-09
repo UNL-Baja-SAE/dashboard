@@ -29,18 +29,19 @@ from stopwatch import Stopwatch
 # On Pi 4, GPIO 18 is Physical Pin 12
 
 print("Pi 4B + MS24 Test Starting...")
-
+ENGAGED = -0.08
+DISENGAGED = 0.08
 def activate_four_wheel(four_engaged,motor):
     if not four_engaged:
         print("eaaengaged")
-        motor.value = 0.25
+        motor.value = ENGAGED
         four_engaged = True
     return four_engaged
 
 def deactive_four_wheel(four_engaged,motor):
     if four_engaged:
         print("disaaengaged")
-        motor.value = -0.25
+        motor.value = DISENGAGED
         four_engaged = False
     return four_engaged
 
@@ -48,7 +49,7 @@ def deactive_four_wheel(four_engaged,motor):
 
 def main():
 
-    motor = Servo(18, min_pulse_width=0.0005, max_pulse_width=0.0025,initial_value=-0.25)
+    motor = Servo(18, min_pulse_width=0.0005, max_pulse_width=0.0025,initial_value=DISENGAGED)
 
     r_button = Button(3, pull_up=True,bounce_time = 0.1)
 
@@ -281,6 +282,14 @@ def main():
         manager.update(time_delta)
         manager.draw_ui(screen)
         pygame.display.update()
+    # --- NEW MOTOR CLEANUP CODE ---
+    print("Securing motor state before exit...")
+    motor.value = DISENGAGED  # Ensure it is explicitly commanded to disengage
+    sleep(0.5)                # Give the physical servo time to move to the position
+    motor.detach()            # Stops sending PWM signals
+    motor.close()             # Completely releases the GPIO resource
+    # ------------------------------
+
     stop_event.set()
     pygame.quit()
     if shutting_down:

@@ -26,24 +26,24 @@ class SharedRPMData:
             return self.rpm
         
 class RPMDevice:
-    HALL_PIN = 16
+    HALL_PIN = 2
     MAGNETS_PER_REV = 1
     def __init__(self):
         # --- Configuration --- 
         self.current_rpm = 0.0
         self.last_pulse_time = time.time()
     def setup_sensor(self):
+        
         try:
-            sensor = Button(self.HALL_PIN, pull_up=True, bounce_time=0.005)
-    
+            self.sensor = Button(self.HALL_PIN, pull_up=True, bounce_time=0.005)
+            self.sensor.when_pressed = self.pulse_callback
+            print("Setting up sensor")
             # 'when_pressed' triggers on a falling edge (3.3V dropping to 0V)
-            sensor.when_pressed = self.pulse_callback
         except Exception as e:
             print(f"Failed to initialize sensor on GPIO {self.HALL_PIN}: {e}")
             sensor = None
     def pulse_callback(self):
         """Triggered automatically when the magnet passes (sensor goes LOW)."""
-    
         current_time = time.time()
         time_diff = current_time - self.last_pulse_time
     
@@ -61,7 +61,7 @@ class RPMDevice:
 
 def rpm_worker(rpm_data, stop_event):
     device = RPMDevice()
-
+    device.setup_sensor()
     while not stop_event.is_set():
         try:
             new_rpm = device.get_rpm()
