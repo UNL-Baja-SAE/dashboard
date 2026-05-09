@@ -11,14 +11,15 @@ class SharedGPSData:
         self.speed = 0.0
         self.lat = 0.0
         self.lon = 0.0
+        self.is_silent = True  # Assume silent until we hear the first byte
         self.lock = threading.Lock()
 
-    def update(self, speed, lat, lon):
+    def update(self, speed, lat, lon, is_silent):
         with self.lock:
             self.speed = speed
             self.lat = lat
             self.lon = lon
-
+            self.is_silent = is_silent
     def get_data(self):
         with self.lock:
             return {"speed": self.speed, "lat": self.lat, "lon": self.lon}
@@ -27,13 +28,16 @@ class SharedGPSData:
         with self.lock:
             return self.speed
 
-
+    def get_is_silent(self): # <-- NEW: Check if the wiring is dead
+        with self.lock:
+            return self.is_silent
 # 2. Your GPS Logic, wrapped in a class to avoid globals
 class GPSDevice:
     def __init__(self):
         self.PORT = "/dev/serial0"
         self.time_synced = False
         self.ser = None
+        self.last_heard_from = time.time()
         self.connect_and_configure()
 
     def connect_and_configure(self):
@@ -78,14 +82,24 @@ class GPSDevice:
             print("System clock is already accurate.")
         self.time_synced = True
 
-    def receive_data(self):
-        
+def receive_data(self):
         if not self.is_connected():
-            print("self is not connected")
-            return None
+            return {"error": True} # Indicate connection/wiring error
 
         try:
-            read_line = self.ser.readline().decode('ascii', errors='replace').strip()
+            # Read raw bytes FIRST to check for physical electrical activity
+            raw_data = self.ser.readline()
+            
+            if len(raw_data) > 0:
+                # We received actual voltage changes/bytes! Reset the watchdog.
+                self.last_heard_from = time.time()
+            elif time.time() - self.last_heard_from > 2.0:
+                # It's been over 2 seconds since we heard ANY bytes over the wire
+                return {"error": True}
+
+            # Now try to decode it normally
+            read_line = raw_data.decode('ascii', errors='replace').strip()
+            
             if read_line.startswith('$GPRMC'):
                 parsed_data = pynmea2.parse(read_line)
                 
@@ -94,31 +108,38 @@ class GPSDevice:
                     return {
                         "speed": round(speed_mph, 1),
                         "lat": parsed_data.latitude,
-                        "lon": parsed_data.longitude
+                        "lon": parsed_data.longitude,
+                        "error": False # Wiring is good, signal is good
                     }
                 else:
-                    return {"speed": 0.0, "lat": 0.0, "lon": 0.0}
+                    # Wiring is good, but no satellite fix yet. 
+                    return {"speed": 0.0, "lat": 0.0, "lon": 0.0, "error": False}
 
         except Exception:
-            pass # Ignore partial lines
+            pass # Ignore bad characters from partial lines
+            
+        # Catch-all watchdog check in case we get stuck in exceptions
+        if time.time() - self.last_heard_from > 2.0:
+            return {"error": True}
             
         return None
 
 
-# 3. The Thread Worker Function
+# 3. Update the Worker Function
 def gps_worker(gps_data, stop_event):
-    # Initialize the hardware INSIDE the thread. 
-    # This prevents the UI from freezing while configuring the UBX chip!
     device = GPSDevice()
 
     while not stop_event.is_set():
         try:
             info = device.receive_data()
             if info is not None:
-                # Safely pass the data back to the main UI thread
-                gps_data.update(info["speed"], info["lat"], info["lon"])
+                if info.get("error", False):
+                    # Silence detected (bad wiring / disconnected)
+                    gps_data.update(0.0, 0.0, 0.0, is_silent=True)
+                else:
+                    # We have physical data
+                    gps_data.update(info["speed"], info["lat"], info["lon"], is_silent=False)
             else:
-                # If no data, tiny sleep to prevent pegging the CPU to 100%
                 time.sleep(0.01) 
         except Exception as e:
             print(f"GPS Thread Error: {e}")
